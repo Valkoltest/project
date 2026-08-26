@@ -2,13 +2,14 @@ services:
   nginx:
     image: nginx:latest
     container_name: nginx
+
     ports:
       - "8080:8080"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./static:/static:ro
-  backend:
+  app:
     build: ./
-    container_name: backend
+    container_name: app
     ports:
-      - "5000:5000"
+      - "8000:8080"
