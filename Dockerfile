@@ -1,4 +1,4 @@
-FROM nginx:latest
-
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY static /static
+FROM python:3.10.21-alpine3.24
+WORKDIR /app
+COPY ./app.py ./app.py
+CMD ["python3", "app.py"]
