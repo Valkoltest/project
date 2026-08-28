@@ -7,15 +7,6 @@ file = open("static/index.html", "r")
 html = file.read()
 file.close()
 
-# def extract_file_data(handler):
-#     length = int(handler.headers.get("Content-Length"))
-#     body = handler.rfile.read(length)
-#     boundary = handler.headers.get("Content-Type").split("=")[-1].encode()
-#     start = body.find(b"\r\n\r\n") + 4
-#     end = body.find(b"\r\n--" + boundary, start)
-#     data = body[start:end]
-#     return data
-
 def extract_file_data(handler):
     length = int(handler.headers.get("Content-Length"))
     body = handler.rfile.read(length)
