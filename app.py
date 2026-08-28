@@ -1,8 +1,35 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+#from xml.sax import handler
+import uuid
+import re
 
 file = open("static/index.html", "r")
 html = file.read()
 file.close()
+
+# def extract_file_data(handler):
+#     length = int(handler.headers.get("Content-Length"))
+#     body = handler.rfile.read(length)
+#     boundary = handler.headers.get("Content-Type").split("=")[-1].encode()
+#     start = body.find(b"\r\n\r\n") + 4
+#     end = body.find(b"\r\n--" + boundary, start)
+#     data = body[start:end]
+#     return data
+
+def extract_file_data(handler):
+    length = int(handler.headers.get("Content-Length"))
+    body = handler.rfile.read(length)
+    boundary = handler.headers["Content-Type"].split("boundary=")[-1].encode()
+    start = body.find(b"\r\n\r\n") + 4
+    end = body.find(b"\r\n--" + boundary, start)
+    data = body[start:end]
+
+    upload_name = re.search(
+        rb'filename="([^"]+)"',
+        body
+    ).group(1).decode()
+
+    return data, upload_name
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -13,19 +40,21 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(html.encode())
 
     def do_POST(self):
-        # content_length = int(self.headers["Content-Length"])
-        # post_data = self.rfile.read(content_length)
-        # print(post_data.decode())
+        data, upload_name = extract_file_data(self)
 
-        # self.send_response(200)
-        # self.end_headers()
-        # self.wfile.write(b"Data received")
+        filename = uuid.uuid4().hex + "." + upload_name.split(".")[-1]
+
+        path = f"images/{filename}"
+
+        f = open(path, "wb")
+        f.write(data)
+        f.close()
 
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         
-        self.wfile.write(b"Ok")
+        self.wfile.write(f"http://localhost:8080/{path}".encode())
 
 server=HTTPServer(("0.0.0.0", 8080), Handler)
 server.serve_forever()
