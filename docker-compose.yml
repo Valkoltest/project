@@ -19,4 +19,6 @@ services:
     volumes:
       - ./images:/app/images
       - ./logs:/logs
+
+  
   
