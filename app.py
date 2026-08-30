@@ -45,7 +45,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         
-        self.wfile.write(f"http://localhost:8080/{path}".encode())
+        self.wfile.write(f"http://localhost:8000/{path}".encode())
 
-server=HTTPServer(("0.0.0.0", 8080), Handler)
+server=HTTPServer(("0.0.0.0", 8000), Handler)
 server.serve_forever()
