@@ -6,9 +6,11 @@ import os
 import mimetypes
 from urllib.parse import urlparse
 
-file = open("static/index.html", "r")
-html = file.read()
-file.close()
+with open("static/index.html", "r", encoding="utf-8") as f:
+    html = f.read()
+
+with open("static/images.html", "r", encoding="utf-8") as f:
+    images_template = f.read()
 
 def extract_file_data(handler):
     length = int(handler.headers.get("Content-Length"))
@@ -43,26 +45,7 @@ def render_images_page():
     if not items:
         items = '<li class="empty">Поки що немає зображень.</li>'
 
-    return f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Images</title>
-        <link rel="stylesheet" href="/static/style.css">
-    </head>
-    <body>
-        <div class="files-container">
-            <h1>Images</h1>
-            <a class="back-link" href="http://localhost:8000/">Back to upload</a>
-            <ul class="file-list">
-                {items}
-            </ul>
-        </div>
-    </body>
-    </html>
-    """.strip()
+    return images_template.replace("{items}", items)
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
