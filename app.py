@@ -1,10 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-#from xml.sax import handler
 import uuid
 import re
 import os
 import mimetypes
-from urllib.parse import urlparse
 
 with open("static/index.html", "r", encoding="utf-8") as f:
     html = f.read()
@@ -27,7 +25,7 @@ def extract_file_data(handler):
 
     return data, upload_name
 
-def render_images_page():
+def images_page():
     image_dir = "images"
     files = []
 
@@ -49,7 +47,7 @@ def render_images_page():
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        path = urlparse(self.path).path
+        path = self.path        
 
         if path == "/" or path == "/index.html":
             self.send_response(200)
@@ -59,7 +57,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/images" or path == "/images/":
-            page = render_images_page().encode()
+            page = images_page().encode()
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
@@ -108,7 +106,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         data, upload_name = extract_file_data(self)
 
-        filename = uuid.uuid4().hex + "." + upload_name.split(".")[-1]
+        filename = uuid.uuid4().hex + "." + upload_name.split(".")[-1]        
 
         path = f"images/{filename}"
 
@@ -121,7 +119,16 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(f"Invalid file extension: *.{extension}".encode())
-            return        
+            return  
+
+        file_size = len(data)
+
+        if file_size > 5 * 1024 * 1024:
+            self.send_response(400)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(f"File size exceeds limit: {file_size} bytes".encode())
+            return      
 
         f = open(path, "wb")
         f.write(data)
