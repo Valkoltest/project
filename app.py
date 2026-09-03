@@ -4,6 +4,7 @@ import re
 import os
 import mimetypes
 import logging
+from html import escape
 
 
 log_directory = os.environ.get("LOG_DIR", "logs")
@@ -59,6 +60,9 @@ def images_page():
 
     return images_template.replace("{items}", items)
 
+def index_page(message=""):
+    return html.replace("{message}", message)
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path        
@@ -68,7 +72,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(html.encode())
+            self.wfile.write(index_page().encode())
             return
 
         if path == "/images" or path == "/images/":
@@ -133,9 +137,14 @@ class Handler(BaseHTTPRequestHandler):
         if extension not in extensions:
             logger.error(f"Помилка: непідтримуваний формат файлу ({upload_name}).")
             self.send_response(400)
-            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
-            self.wfile.write(f"Invalid file extension: *.{extension}".encode())
+            message = (
+                '<p class="upload-result error">'
+                f"Помилка: непідтримуваний формат файлу ({escape(upload_name)})."
+                "</p>"
+            )
+            self.wfile.write(index_page(message).encode())
             return  
 
         file_size = len(data)
@@ -143,9 +152,15 @@ class Handler(BaseHTTPRequestHandler):
         if file_size > 5 * 1024 * 1024:
             logger.error(f"Помилка: файл ({upload_name}) не завантажено: розмір ({file_size}) байт перевищує ліміт.")
             self.send_response(400)
-            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
-            self.wfile.write(f"File size exceeds limit: {file_size} bytes".encode())
+            message = (
+                '<p class="upload-result error">'
+                f"Помилка: файл ({escape(upload_name)}) не завантажено: "
+                f"розмір ({file_size}) байт перевищує ліміт."
+                "</p>"
+            )
+            self.wfile.write(index_page(message).encode())
             return      
 
         f = open(path, "wb")
@@ -154,10 +169,14 @@ class Handler(BaseHTTPRequestHandler):
         logger.info(f"Успіх: зображення ({upload_name}) завантажено.")
 
         self.send_response(200)
-        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        
-        self.wfile.write(f"http://localhost:8000/{path}".encode())
+        message = (
+            '<p class="upload-result success">'
+            f"Успіх: зображення ({escape(upload_name)}) завантажено."
+            "</p>"
+        )
+        self.wfile.write(index_page(message).encode())
 
 server=HTTPServer(("0.0.0.0", 8000), Handler)
 server.serve_forever()

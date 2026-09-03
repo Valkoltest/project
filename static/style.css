@@ -26,6 +26,19 @@ h1 {
     text-align: center;
 }
 
+.upload-result {
+    margin: 16px 0;
+    font-weight: 600;
+}
+
+.upload-result.success {
+    color: #15803d;
+}
+
+.upload-result.error {
+    color: #b91c1c;
+}
+
 .back-link {
     display: inline-block;
     margin-bottom: 20px;
