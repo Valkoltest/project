@@ -7,6 +7,9 @@ services:
 
     ports:
       - "8080:8080"
+
+    restart: unless-stopped
+
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./static:/static:ro
@@ -16,6 +19,9 @@ services:
     container_name: app
     ports:
       - "8000:8000"
+
+    restart: unless-stopped
+    
     environment:
       - LOG_DIR=/logs
     volumes:
