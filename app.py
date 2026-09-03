@@ -3,6 +3,20 @@ import uuid
 import re
 import os
 import mimetypes
+import logging
+
+
+log_directory = os.environ.get("LOG_DIR", "logs")
+os.makedirs(log_directory, exist_ok=True)
+log_file = logging.FileHandler(os.path.join(log_directory, "app.log"),encoding="utf-8")
+log_file.setFormatter(logging.Formatter(
+    "[%(asctime)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+))
+logging.basicConfig(level=logging.INFO,handlers=[log_file])
+logger = logging.getLogger()
+
+
 
 with open("static/index.html", "r", encoding="utf-8") as f:
     html = f.read()
@@ -48,6 +62,7 @@ def images_page():
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path        
+        logger.info(f"Дія: перегляд сторінки ({path}).")
 
         if path == "/" or path == "/index.html":
             self.send_response(200)
@@ -99,6 +114,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
         self.send_response(404)
+        logger.error(f"Помилка: ресурс ({path})не знайдено.")
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         self.wfile.write(b"Not Found")
@@ -115,6 +131,7 @@ class Handler(BaseHTTPRequestHandler):
         extension = extension.lower()
 
         if extension not in extensions:
+            logger.error(f"Помилка: непідтримуваний формат файлу ({upload_name}).")
             self.send_response(400)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
@@ -124,6 +141,7 @@ class Handler(BaseHTTPRequestHandler):
         file_size = len(data)
 
         if file_size > 5 * 1024 * 1024:
+            logger.error(f"Помилка: файл ({upload_name}) не завантажено: розмір ({file_size}) байт перевищує ліміт.")
             self.send_response(400)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
@@ -133,6 +151,7 @@ class Handler(BaseHTTPRequestHandler):
         f = open(path, "wb")
         f.write(data)
         f.close()
+        logger.info(f"Успіх: зображення ({upload_name}) завантажено.")
 
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
