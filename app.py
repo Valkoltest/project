@@ -5,6 +5,8 @@ import os
 import mimetypes
 import logging
 from html import escape
+import psycopg
+
 
 
 log_directory = os.environ.get("LOG_DIR", "logs")
