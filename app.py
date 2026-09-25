@@ -6,9 +6,19 @@ import mimetypes
 import logging
 from html import escape
 import psycopg
+from psycopg import Connection
+import time
 
 
-
+def insert_image_metadata(connection: Connection, filename: str, original_name:str,size: int,file_type:str):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO images (filename, original_name, size, file_type) VALUES (%s, %s, %s, %s) RETURNING id;",
+            [filename, original_name, size, file_type]
+        )
+        connection.commit()
+        return cursor.fetchone()[0]
+    
 log_directory = os.environ.get("LOG_DIR", "logs")
 os.makedirs(log_directory, exist_ok=True)
 log_file = logging.FileHandler(os.path.join(log_directory, "app.log"),encoding="utf-8")
@@ -64,6 +74,34 @@ def images_page():
 
 def index_page(message=""):
     return html.replace("{message}", message)
+
+connection = None
+while connection is None:
+    try:
+        connection = psycopg.connect(
+            "postgresql://images_backend:1048575@db:5432/images_hosting"
+        )
+        logger.info("Успіх: підключення до бази даних встановлено.")
+    except Exception as e:
+        logger.error(f"Помилка: не вдалося підключитися до бази даних. {e}")
+        time.sleep(1)  # Затримка перед повторною спробою
+
+with connection.cursor() as cursor:
+    cursor.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS images (
+            id SERIAL PRIMARY KEY,
+            filename TEXT NOT NULL,
+            original_name TEXT NOT NULL,
+            size INTEGER NOT NULL,
+            upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            file_type TEXT NOT NULL
+        );
+        '''
+    )
+    connection.commit()
+    logger.info("Успіх: таблиця 'images' створена або вже існує.")
+
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -179,6 +217,17 @@ class Handler(BaseHTTPRequestHandler):
             "</p>"
         )
         self.wfile.write(index_page(message).encode())
+        try:
+            inserted_id = insert_image_metadata(
+                connection, 
+                filename, 
+                upload_name,
+                file_size,
+                extension
+            )
+            logger.info(f"Успіх: метадані зображення ({upload_name}) вставлено в базу даних з ID {inserted_id}.")
+        except Exception as e:
+            logger.error(f"Помилка: не вдалося вставити метадані зображення ({upload_name}) в базу даних. {e}")
 
 server=HTTPServer(("0.0.0.0", 8000), Handler)
 server.serve_forever()

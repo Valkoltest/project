@@ -30,7 +30,7 @@ services:
   db:
     image: postgres:18-alpine
     shm_size: '128mb'
-    restart: always
+    restart: unless-stopped
     container_name: db
     environment:
       POSTGRES_USER: images_backend
