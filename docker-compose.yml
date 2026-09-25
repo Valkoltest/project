@@ -27,6 +27,20 @@ services:
     volumes:
       - ./images:/app/images
       - ./logs:/logs
-
+  db:
+    image: postgres:18-alpine
+    shm_size: '128mb'
+    restart: always
+    #container_name: db
+    environment:
+      POSTGRES_USER: images_backend
+      POSTGRES_PASSWORD: 1048575
+      POSTGRES_DB: images_hosting
+    
+    # ports:
+    #   - "5432:5432"
+    
+    # volumes:
+    #   - ./db_data:/var/lib/postgresql/data
   
   
