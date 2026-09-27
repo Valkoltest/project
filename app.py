@@ -10,33 +10,6 @@ from psycopg import Connection
 import time
 
 
-def insert_image_metadata(connection: Connection, filename: str, original_name:str,size: int,file_type:str):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "INSERT INTO images (filename, original_name, size, file_type) VALUES (%s, %s, %s, %s) RETURNING id;",
-            [filename, original_name, size, file_type]
-        )
-        connection.commit()
-        return cursor.fetchone()[0]
-    
-log_directory = os.environ.get("LOG_DIR", "logs")
-os.makedirs(log_directory, exist_ok=True)
-log_file = logging.FileHandler(os.path.join(log_directory, "app.log"),encoding="utf-8")
-log_file.setFormatter(logging.Formatter(
-    "[%(asctime)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-))
-logging.basicConfig(level=logging.INFO,handlers=[log_file])
-logger = logging.getLogger()
-
-
-
-with open("static/index.html", "r", encoding="utf-8") as f:
-    html = f.read()
-
-with open("static/images.html", "r", encoding="utf-8") as f:
-    images_template = f.read()
-
 def extract_file_data(handler):
     length = int(handler.headers.get("Content-Length"))
     body = handler.rfile.read(length)
@@ -51,6 +24,7 @@ def extract_file_data(handler):
     ).group(1).decode()
 
     return data, upload_name
+
 
 def images_page():
     image_dir = "images"
@@ -72,8 +46,58 @@ def images_page():
 
     return images_template.replace("{items}", items)
 
+
 def index_page(message=""):
     return html.replace("{message}", message)
+
+
+def insert_image_metadata(connection: Connection, filename: str, original_name:str,size: int,file_type:str):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO images (filename, original_name, size, file_type) VALUES (%s, %s, %s, %s) RETURNING id;",
+            [filename, original_name, size, file_type]
+        )
+        connection.commit()
+        return cursor.fetchone()[0]
+
+
+def get_images_metadata(connection: Connection, page: int=1):
+    offset = 10 * (page - 1)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM images OFFSET %s LIMIT 10;",
+            [offset]
+        )
+        return cursor.fetchall()
+
+
+def delete_image_metadata(connection: Connection, id: int):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM images WHERE id = %s;",
+            [id]
+        )
+        connection.commit()
+
+
+log_directory = os.environ.get("LOG_DIR", "logs")
+os.makedirs(log_directory, exist_ok=True)
+log_file = logging.FileHandler(os.path.join(log_directory, "app.log"),encoding="utf-8")
+log_file.setFormatter(logging.Formatter(
+    "[%(asctime)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+))
+logging.basicConfig(level=logging.INFO,handlers=[log_file])
+logger = logging.getLogger()
+
+
+with open("static/index.html", "r", encoding="utf-8") as f:
+    html = f.read()
+
+
+with open("static/images.html", "r", encoding="utf-8") as f:
+    images_template = f.read()
+
 
 connection = None
 while connection is None:
@@ -85,6 +109,7 @@ while connection is None:
     except Exception as e:
         logger.error(f"Помилка: не вдалося підключитися до бази даних. {e}")
         time.sleep(1)  # Затримка перед повторною спробою
+
 
 with connection.cursor() as cursor:
     cursor.execute(
