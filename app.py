@@ -26,7 +26,7 @@ def extract_file_data(handler):
     return data, upload_name
 
 
-def images_page():
+def images_page(temp_list):
     image_dir = "images"
     files = []
 
@@ -37,12 +37,21 @@ def images_page():
         )
 
     items = "\n".join(
-        f'<li class="file-item"><a href="/images/{name}">{name}</a></li>'
-        for name in files
+        f'''
+            <tr>
+                <td>{item[1]}</td>
+                <td>{item[2]}</td>
+                <td>{item[3]/1024:.2f}</td>
+                <td>{item[4]}</td>
+                <td>{item[5]}</td>
+            </tr>          
+        '''
+        #for name in files
+        for item in temp_list
     )
 
     if not items:
-        items = '<li class="empty">Поки що немає зображень.</li>'
+        items = 'Поки що немає зображень. Завантажте зображення на головній сторінці.'
 
     return images_template.replace("{items}", items)
 
@@ -83,11 +92,8 @@ def delete_image_metadata(connection: Connection, id: int):
 log_directory = os.environ.get("LOG_DIR", "logs")
 os.makedirs(log_directory, exist_ok=True)
 log_file = logging.FileHandler(os.path.join(log_directory, "app.log"),encoding="utf-8")
-log_file.setFormatter(logging.Formatter(
-    "[%(asctime)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-))
-logging.basicConfig(level=logging.INFO,handlers=[log_file])
+log_file.setFormatter(logging.Formatter("[%(asctime)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S",))
+logging.basicConfig(level=logging.INFO, handlers=[log_file])
 logger = logging.getLogger()
 
 
@@ -95,7 +101,7 @@ with open("static/index.html", "r", encoding="utf-8") as f:
     html = f.read()
 
 
-with open("static/images.html", "r", encoding="utf-8") as f:
+with open("static/images-list.html", "r", encoding="utf-8") as f:
     images_template = f.read()
 
 
@@ -105,7 +111,7 @@ while connection is None:
         connection = psycopg.connect(
             "postgresql://images_backend:1048575@db:5432/images_hosting"
         )
-        logger.info("Успіх: підключення до бази даних встановлено.")
+        logger.info("Підключення до бази даних встановлено.")
     except Exception as e:
         logger.error(f"Помилка: не вдалося підключитися до бази даних. {e}")
         time.sleep(1)  # Затримка перед повторною спробою
@@ -125,13 +131,13 @@ with connection.cursor() as cursor:
         '''
     )
     connection.commit()
-    logger.info("Успіх: таблиця 'images' створена або вже існує.")
+    logger.info("Таблиця 'images' створена або вже існує.")
 
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path        
-        logger.info(f"Дія: перегляд сторінки ({path}).")
+        logger.info(f"Перегляд сторінки ({path}).")
 
         if path == "/" or path == "/index.html":
             self.send_response(200)
@@ -140,8 +146,10 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(index_page().encode())
             return
 
-        if path == "/images" or path == "/images/":
-            page = images_page().encode()
+        if path == "/images-list" or path == "/images-list/":
+            temp_list = get_images_metadata(connection)
+            logger.info(f"Отримано метадані зображень: {temp_list}.")
+            page = images_page(temp_list).encode()
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
@@ -231,7 +239,7 @@ class Handler(BaseHTTPRequestHandler):
         f = open(path, "wb")
         f.write(data)
         f.close()
-        logger.info(f"Успіх: зображення ({upload_name}) завантажено.")
+        logger.info(f"Зображення ({upload_name}) завантажено.")
 
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
@@ -250,7 +258,7 @@ class Handler(BaseHTTPRequestHandler):
                 file_size,
                 extension
             )
-            logger.info(f"Успіх: метадані зображення ({upload_name}) вставлено в базу даних з ID {inserted_id}.")
+            logger.info(f"Метадані зображення ({upload_name}) вставлено в базу даних з ID {inserted_id}.")
         except Exception as e:
             logger.error(f"Помилка: не вдалося вставити метадані зображення ({upload_name}) в базу даних. {e}")
 
