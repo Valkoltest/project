@@ -201,7 +201,7 @@ class Handler(BaseHTTPRequestHandler):
 
         filename = uuid.uuid4().hex + "." + upload_name.split(".")[-1]        
 
-        path = f"images/{filename}"
+        path = f"/images/{filename}"
 
         extensions = ["jpg", "png", "gif"]
         extension = upload_name.split(".")[-1]
@@ -262,5 +262,5 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.error(f"Помилка: не вдалося вставити метадані зображення ({upload_name}) в базу даних. {e}")
 
-server=HTTPServer(("0.0.0.0", 8000), Handler)
+server=HTTPServer(("0.0.0.0", 8080), Handler)
 server.serve_forever()
