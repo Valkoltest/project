@@ -1,0 +1,20 @@
+[2026-09-29 11:56:06] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 11:56:07] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 11:56:08] Підключення до бази даних встановлено.
+[2026-09-29 11:56:08] Таблиця 'images' створена або вже існує.
+[2026-09-29 12:05:53] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 12:05:54] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 12:05:55] Підключення до бази даних встановлено.
+[2026-09-29 12:05:55] Таблиця 'images' створена або вже існує.
+[2026-09-29 12:10:19] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 12:10:20] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 12:10:21] Помилка: не вдалося підключитися до бази даних. connection failed: connection to server at "172.18.0.2", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+[2026-09-29 12:10:22] Підключення до бази даних встановлено.
+[2026-09-29 12:10:22] Таблиця 'images' створена або вже існує.

@@ -39,11 +39,12 @@ def images_page(temp_list):
     items = "\n".join(
         f'''
             <tr>
-                <td><a href="/images/{item[1]}">{item[1]}</a></td>
+                <td>{item[1]}</td>
                 <td>{item[2]}</td>
                 <td>{item[3]/1024:.2f}</td>
                 <td>{item[4]}</td>
                 <td>{item[5]}</td>
+                <td><a href="/images/{item[1]}">\U0001F4C2</a></td>
                 <td><a href="/delete-image/{item[0]}">\U0001F5D1</a></td>
             </tr>         
         '''
