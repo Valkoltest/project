@@ -11,7 +11,7 @@ body {
 
 .container,
 .files-container {
-    width: min(700px, 90vw);
+    width: min(1024px, 90vw);
     background: #ffffff;
     border-radius: 16px;
     box-shadow: 0 12px 30px rgba(31, 41, 55, 0.12);
@@ -35,7 +35,7 @@ table {
 td, th {
     border: 1px solid #000;
     padding: 8px;
-    text-align: left;
+    text-align: center;
 }
 
 .upload-result {
