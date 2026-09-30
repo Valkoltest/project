@@ -9,6 +9,9 @@ import psycopg
 from psycopg import Connection
 import time
 
+IMAGES_DIR = "images"
+os.makedirs(IMAGES_DIR, exist_ok=True) 
+
 
 def extract_file_data(handler):
     length = int(handler.headers.get("Content-Length"))
@@ -175,9 +178,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
         if path.startswith("/images/"):
-            relative_path = path[len("/images/"):]
-            file_path = os.path.join("images", relative_path)
-
+            relative_path = os.path.basename(path[len("/images/"):])
+            file_path = os.path.join(IMAGES_DIR, relative_path)
             if os.path.isfile(file_path):
                 content_type, _ = mimetypes.guess_type(file_path)
                 if content_type is None:
@@ -200,9 +202,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         data, upload_name = extract_file_data(self)
 
-        filename = uuid.uuid4().hex + "." + upload_name.split(".")[-1]        
+        filename = uuid.uuid4().hex + "." + upload_name.split(".")[-1]      
 
-        path = f"/images/{filename}"
 
         extensions = ["jpg", "png", "gif"]
         extension = upload_name.split(".")[-1]
@@ -237,9 +238,10 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(index_page(message).encode())
             return      
 
-        f = open(path, "wb")
-        f.write(data)
-        f.close()
+        file_path = os.path.join(IMAGES_DIR, filename)
+        with open(file_path, "wb") as f:
+            f.write(data)
+
         logger.info(f"Зображення ({upload_name}) завантажено.")
 
         self.send_response(200)

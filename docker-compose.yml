@@ -1,22 +1,13 @@
 services:
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     container_name: nginx
-
-    build:
-      context: .
-      dockerfile: Dockerfile
-
-    depends_on:
-      - app
-
+    depends_on: [app]
     ports:
-      - "8080:8080"
-
-    restart: unless-stopped
-
+      - "8080:80"
     volumes:
-      - ./images:/images
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./images:/usr/share/nginx/images:ro
   app:
     build: ./
     container_name: app
@@ -37,9 +28,6 @@ services:
       POSTGRES_USER: images_backend
       POSTGRES_PASSWORD: 1048575
       POSTGRES_DB: images_hosting
-    
-    # ports:
-    #   - "5432:5432"
     
     # volumes:
     #   - ./db_data:/var/lib/postgresql/data
