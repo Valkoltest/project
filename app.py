@@ -113,9 +113,14 @@ with open("static/images-list.html", "r", encoding="utf-8") as f:
 
 connection = None
 while connection is None:
+    db_pwd = os.environ['POSTGRES_PASSWORD']
+    db_name = os.environ['POSTGRES_DB']
+    db_user = os.environ['POSTGRES_USER']
+    db_port = os.environ['DB_PORT']
+    db_host = os.environ['DB_HOST']
     try:
         connection = psycopg.connect(
-            "postgresql://images_backend:1048575@db:5432/images_hosting"
+            f"postgresql:// {db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}"
         )
         logger.info("Підключення до бази даних встановлено.")
     except Exception as e:

@@ -11,9 +11,7 @@ services:
   app:
     build: ./
     container_name: app
-
-    restart: unless-stopped
-    
+    restart: unless-stopped    
     environment:
       - LOG_DIR=/logs
     volumes:
@@ -25,9 +23,9 @@ services:
     restart: unless-stopped
     container_name: db
     environment:
-      POSTGRES_USER: images_backend
-      POSTGRES_PASSWORD: 1048575
-      POSTGRES_DB: images_hosting
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     
     # volumes:
     #   - ./db_data:/var/lib/postgresql/data
