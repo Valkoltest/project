@@ -87,10 +87,12 @@ def get_images_metadata(connection: Connection, page: int=1):
 def delete_image_metadata(connection: Connection, id: int):
     with connection.cursor() as cursor:
         cursor.execute(
-            "DELETE FROM images WHERE id = %s;",
+            "DELETE FROM images WHERE id = %s RETURNING filename;",
             [id]
         )
+        row = cursor.fetchone()
         connection.commit()
+        return row[0] if row else None
 
 
 log_directory = os.environ.get("LOG_DIR", "logs")
@@ -192,6 +194,29 @@ class Handler(BaseHTTPRequestHandler):
                 with open(file_path, "rb") as file:
                     self.wfile.write(file.read())
                 return
+
+        if path.startswith("/delete-image/"):
+            try:
+                image_id = int(path.rsplit("/", 1)[-1])
+                filename = delete_image_metadata(connection, image_id)
+
+                if filename:
+                    file_path = os.path.join(IMAGES_DIR, os.path.basename(filename))
+                    try:
+                        os.remove(file_path)
+                        logger.info(f"Зображення ({filename}) видалено з диска та з бази даних (ID {image_id}).")
+                    except FileNotFoundError:
+                        logger.error(f"Файл ({filename}) не знайдено на диску, запис у базі даних видалено.")
+                else:
+                    logger.error(f"Зображення з ID {image_id} не знайдено в базі даних.")
+            except Exception as e:
+                connection.rollback()
+                logger.error(f"Помилка видалення зображення ({path}): {e}")
+
+            self.send_response(303)
+            self.send_header("Location", "/images-list")
+            self.end_headers()
+            return
 
         self.send_response(404)
         logger.error(f"Помилка: ресурс ({path})не знайдено.")
