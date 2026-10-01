@@ -112,15 +112,20 @@ with open("static/images-list.html", "r", encoding="utf-8") as f:
 
 
 connection = None
+db_pwd = os.environ['POSTGRES_PASSWORD']
+db_name = os.environ['POSTGRES_DB']
+db_user = os.environ['POSTGRES_USER']
+db_port = os.environ['DB_PORT']
+db_host = os.environ['DB_HOST']
 while connection is None:
-    db_pwd = os.environ['POSTGRES_PASSWORD']
-    db_name = os.environ['POSTGRES_DB']
-    db_user = os.environ['POSTGRES_USER']
-    db_port = os.environ['DB_PORT']
-    db_host = os.environ['DB_HOST']
     try:
         connection = psycopg.connect(
-            f"postgresql:// {db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}"
+            #f"postgresql://{db_user}:{db_pwd}@{db_host}:{db_port}/{db_name}"
+            host=db_host,
+            port=db_port,
+            dbname=db_name,
+            user=db_user,
+            password=db_pwd,
         )
         logger.info("Підключення до бази даних встановлено.")
     except Exception as e:
