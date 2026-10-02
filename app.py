@@ -1,6 +1,4 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs
-from urllib.parse import parse_qs
 import uuid
 import re
 import os
