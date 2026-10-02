@@ -300,5 +300,5 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.error(f"Помилка: не вдалося вставити метадані зображення ({upload_name}) в базу даних. {e}")
 
-server=HTTPServer(("0.0.0.0", 8080), Handler)
+server=HTTPServer(("0.0.0.0", 8000), Handler)
 server.serve_forever()
