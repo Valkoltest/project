@@ -1,6 +1,5 @@
 .venv
 Dockerfile
 .dockerignore
-images/
 logs
 .env
