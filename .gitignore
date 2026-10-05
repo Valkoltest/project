@@ -5,3 +5,5 @@ images/*
 !images/.gitkeep
 logs
 .env
+backups/*
+!backups/.gitkeep
