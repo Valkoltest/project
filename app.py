@@ -8,6 +8,7 @@ from html import escape
 import psycopg
 from psycopg import Connection
 import time
+from urllib.parse import urlparse, parse_qs
 
 IMAGES_DIR = "images"
 os.makedirs(IMAGES_DIR, exist_ok=True) 
@@ -29,37 +30,6 @@ def extract_file_data(handler):
     return data, upload_name
 
 
-def images_page(temp_list):
-    image_dir = "images"
-    files = []
-
-    if os.path.isdir(image_dir):
-        files = sorted(
-            f for f in os.listdir(image_dir)
-            if os.path.isfile(os.path.join(image_dir, f))
-        )
-
-    items = "\n".join(
-        f'''
-            <tr>
-                <td>{item[1]}</td>
-                <td>{item[2]}</td>
-                <td>{item[3]/1024:.2f}</td>
-                <td>{item[4]}</td>
-                <td>{item[5]}</td>
-                <td><a href="/images/{item[1]}">\U0001F4C2</a></td>
-                <td><a href="/delete-image/{item[0]}">\U0001F5D1</a></td>
-            </tr>         
-        '''
-        for item in temp_list
-    )
-
-    if not items:
-        items = 'Поки що немає зображень. Завантажте зображення на головній сторінці.'
-
-    return images_template.replace("{items}", items)
-
-
 def index_page(message=""):
     return html.replace("{message}", message)
 
@@ -78,10 +48,56 @@ def get_images_metadata(connection: Connection, page: int=1):
     offset = 10 * (page - 1)
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT * FROM images OFFSET %s LIMIT 10;",
+            "SELECT * FROM images ORDER BY id OFFSET %s LIMIT 10;",
             [offset]
         )
         return cursor.fetchall()
+    
+
+def count_images(connection: Connection) -> int:
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM images;")
+        return cursor.fetchone()[0]
+
+
+def pagination_html(page: int, total_pages: int) -> str:
+    total = count_images(connection)
+    if total <= 0:
+        return ""
+
+    parts = ['<nav class="pagination">']
+
+    for p in range(1, total_pages + 1):
+        if p == page:
+            parts.append(f'<span class="current">{p}</span>')
+        else:
+            parts.append(f'<a href="/images-list?page={p}">{p}</a>')
+
+    parts.append("</nav>")
+    return " ".join(parts)
+
+
+def images_page(temp_list, page=1, total_pages=1):
+    items = "\n".join(
+        f'''
+            <tr>
+                <td>{item[1]}</td>
+                <td>{escape(item[2])}</td>
+                <td>{item[3]/1024:.2f}</td>
+                <td>{item[4]}</td>
+                <td>{item[5]}</td>
+                <td><a href="/images/{item[1]}">\U0001F4C2</a></td>
+                <td><a href="/delete-image/{item[0]}">\U0001F5D1</a></td>
+            </tr>
+        '''
+        for item in temp_list
+    )
+
+    if not items:
+        items = 'Поки що немає зображень. Завантажте зображення на головній сторінці.'
+
+    result = images_template.replace("{items}", items)
+    return result.replace("{pagination}", pagination_html(page, total_pages))
 
 
 def delete_image_metadata(connection: Connection, id: int):
@@ -130,7 +146,7 @@ while connection is None:
         logger.info("Підключення до бази даних встановлено.")
     except Exception as e:
         logger.error(f"Помилка: не вдалося підключитися до бази даних. {e}")
-        time.sleep(1)  # Затримка перед повторною спробою
+        time.sleep(1)
 
 
 with connection.cursor() as cursor:
@@ -152,8 +168,10 @@ with connection.cursor() as cursor:
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        path = self.path        
-        logger.info(f"Перегляд сторінки ({path}).")
+        parsed = urlparse(self.path)
+        path = parsed.path
+        query = parse_qs(parsed.query)
+        logger.info(f"Перегляд сторінки ({self.path}).")
 
         if path == "/" or path == "/index.html":
             self.send_response(200)
@@ -163,13 +181,22 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/images-list" or path == "/images-list/":
-            temp_list = get_images_metadata(connection)
-            logger.info(f"Отримано метадані зображень: {temp_list}.")
-            page = images_page(temp_list).encode()
+            try:
+                page = int(query.get("page", ["1"])[0])
+            except ValueError:
+                page = 1
+
+            total = count_images(connection)
+            total_pages = max(1, -(-total // 10)) 
+            page = min(max(page, 1), total_pages)  
+
+            temp_list = get_images_metadata(connection, page)
+            html_page = images_page(temp_list, page, total_pages).encode()
+
             self.send_response(200)
-            self.send_header("Content-type", "text/html")
+            self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
-            self.wfile.write(page)
+            self.wfile.write(html_page)
             return
 
         if path.startswith("/static/"):
