@@ -1,5 +1,7 @@
 .venv
 Dockerfile
 .dockerignore
+images/*
+!images/.gitkeep
 logs
 .env
