@@ -93,3 +93,22 @@ td, th {
     color: #6b7280;
     padding: 12px 0;
 }
+
+.pagination {
+    margin: 16px auto;
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: wrap; 
+}
+
+.pagination a, .pagination .current { 
+    padding: 4px 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    text-decoration: none; 
+}
+
+.pagination .current { 
+    background: #333; 
+    color: #fff; 
+}
