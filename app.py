@@ -1,3 +1,4 @@
+import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import uuid
 import re
@@ -9,9 +10,32 @@ import psycopg
 from psycopg import Connection
 import time
 from urllib.parse import urlparse, parse_qs
+import subprocess
+from datetime import datetime
 
 IMAGES_DIR = "images"
 os.makedirs(IMAGES_DIR, exist_ok=True) 
+BACKUP_DIR = os.environ.get("BACKUP_DIR", "/backups")
+
+def create_backup() -> str:
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    name = f"backup_{datetime.now():%Y-%m-%d_%H%M%S}.sql"
+    final_path = os.path.join(BACKUP_DIR, name)
+    tmp_path = final_path + ".tmp"
+
+    env = {**os.environ, "PGPASSWORD": db_pwd}
+    try:
+        with open(tmp_path, "wb") as f:
+            subprocess.run(
+                ["pg_dump", "-h", db_host, "-p", db_port, "-U", db_user, db_name],
+                stdout=f, stderr=subprocess.PIPE, env=env, check=True,
+            )
+        os.replace(tmp_path, final_path)
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+    return name
 
 
 def extract_file_data(handler):
@@ -231,6 +255,20 @@ class Handler(BaseHTTPRequestHandler):
                 with open(file_path, "rb") as file:
                     self.wfile.write(file.read())
                 return
+
+        if path == "/backup":
+            try:
+                name = create_backup()
+                logger.info(f"Резервну копію створено: {name}")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Помилка pg_dump: {e.stderr.decode(errors='replace')}")
+            except Exception as e:
+                logger.error(f"Помилка створення резервної копії: {e}")
+
+            self.send_response(303)
+            self.send_header("Location", "/images-list")
+            self.end_headers()
+            return
 
         if path.startswith("/delete-image/"):
             try:
