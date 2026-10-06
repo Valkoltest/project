@@ -15,6 +15,7 @@ from datetime import datetime
 
 IMAGES_DIR = "images"
 os.makedirs(IMAGES_DIR, exist_ok=True) 
+
 BACKUP_DIR = os.environ.get("BACKUP_DIR", "/backups")
 
 def create_backup() -> str:
