@@ -268,6 +268,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(303)
             self.send_header("Location", "/images-list")
             self.end_headers()
+
+            
             return
 
         if path.startswith("/delete-image/"):

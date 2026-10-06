@@ -19,6 +19,7 @@ services:
     volumes:
       - ./images:/app/images
       - ./logs:/logs
+      - ./backups:/backups
   db:
     image: postgres:18-alpine
     shm_size: '128mb'
