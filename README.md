@@ -129,13 +129,3 @@ docker compose down -v     # УВАГА: також видаляє том БД (
 Копії створюються за допомогою `pg_dump` і зберігаються у `./backups` з іменем у форматі `backup_YYYY-MM-DD_HHMMSS.sql`, наприклад `backup_2026-10-07_153000.sql`.
 
 На сторінці `/images-list` натисніть **Create Backup**. Бекенд сам викликає `pg_dump` (клієнт PostgreSQL встановлено в образі `app`) і зберігає файл у `/backups`.
-
-Корисні команди:
-
-```bash
-docker compose ps
-docker compose logs -f app nginx
-tail -f logs/app.log
-docker compose exec nginx nginx -t
-```
-
